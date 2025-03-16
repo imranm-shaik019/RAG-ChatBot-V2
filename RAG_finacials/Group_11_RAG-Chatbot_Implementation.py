@@ -34,12 +34,12 @@ else:
     financial_tables = []
 
 # Initialize SentenceTransformer model for text embeddings
-model = SentenceTransformer("all-MiniLM-L6-v2")
+encoder_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def retrieve_similar_documents(query, top_k=3):
     """Performs single-stage retrieval using FAISS index and structured financial data."""
     # Encode query into an embedding vector and normalize
-    query_emb = model.encode([query], convert_to_numpy=True)
+    query_emb = encoder_model.encode([query], convert_to_numpy=True)
     query_emb = query_emb / np.linalg.norm(query_emb)
 
     # Perform nearest neighbor search on FAISS index
@@ -98,7 +98,7 @@ def multi_stage_retrieve(query, top_k_coarse=3, top_k_fine=3):
                 candidate_chunk_indices.append(idx)
 
     # Stage 2: Fine retrieval using FAISS
-    query_emb = model.encode([query], convert_to_numpy=True)
+    query_emb = encoder_model.encode([query], convert_to_numpy=True)
     query_emb = query_emb / np.linalg.norm(query_emb)
     distances, indices = faiss_pdf.search(query_emb, top_k_fine * 10)
 
