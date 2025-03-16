@@ -15,12 +15,35 @@ from transformers import pipeline
 model_name = "google/flan-t5-small"
 generator_pipeline = pipeline("text2text-generation", model=model_name)
 
+classifier = pipeline('zero-shot-classification', model='facebook/bart-large-mnli')
+
+def is_financial_query(query: str) -> bool:
+    """
+    Determines if the given query is related to finance using zero-shot classification.
+
+    Args:
+        query (str): The user's query to classify.
+
+    Returns:
+        bool: True if the query is classified as financial, otherwise False.
+    """
+    # Define candidate labels for classification
+    candidate_labels = ["financial", "non-financial"]
+
+    # Use the classifier to determine which label best matches the query
+    result = classifier(query, candidate_labels)
+
+    # Return True if the top predicted label is "financial", otherwise False
+    return result['labels'][0] == 'financial'
+
 def generate_response(query, mode="basic"):
     """
     1) Decide which retriever to call (basic vs. multi-stage).
     2) Build a final prompt from retrieved docs.
     3) Truncate prompt if needed, then call Flan-T5 to generate an answer.
     """
+    if not is_financial_query(query):
+        return "This is not a financial query. Please ask something related to finance."    
 
     # --- Stage 1: Retrieve top chunks ---
     if mode == "multi-stage" and MULTI_STAGE_AVAILABLE:
